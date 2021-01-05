@@ -19,7 +19,7 @@ def expfig(x, a, b):  # exponential for set of values (used for visualizing of o
 download = True  # 'True' means that the current data from mzcr.cz will be downloaded
 N0 = 226-1  # we only wanna visualize from this date (8th of September)
 Nfit = N0+85
-days_step = 2.0  # should we show each day?
+days_step = 2  # should we show each day?
 
 # download the file (optional), open it and import its contents
 filename = 'covid19data.csv'
