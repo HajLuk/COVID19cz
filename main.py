@@ -19,7 +19,7 @@ def expfig(x, a, b):  # exponential for set of values (used for visualizing of o
 download = True  # 'True' means that the current data from mzcr.cz will be downloaded
 N0 = 226-1  # we only wanna visualize from this date (8th of September)
 Nfit = N0+85
-days_step = 2  # should we show each day?
+days_step = 3  # should we show each day?
 
 # download the file (optional), open it and import its contents
 filename = 'covid19data.csv'
@@ -85,15 +85,17 @@ plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdete), '-.', color=(0.65, 0.3, 0.0)
 plt.plot(day_counter, daily_sick[1:N], marker='o', color='b', label="Denni prirustky nakazenych")  # prirustky
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdena), '-.', color=(0, 0, 0.65), label="Exp. prolozeni prirustku nakazenych")  # fit increments
 # plot
-ylab = [str(i)+"k" if i > 0 else "0" for i in range(0, 1000, 20)]
+ystep = 5  # ticks on y axis after ystep (in thousands)
+ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
-plt.yticks(np.arange(0.0, 1.0e6, 2.0e4), ylab)
+plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
 plt.xlim(N0*1.0, N*1.05)
-plt.ylim(0.0, exponential(N*1.05, *ab))
+plt.ylim(0.0, exponential(N*1.13, *ab))
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
 fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
 fig1.show()  # we have special name for it since we want it to be displayed alongside the other figure
 
 # SECOND FIGURE
@@ -105,12 +107,15 @@ plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abkumr), '--', color=(0.3, 0.3, 0.3),
 plt.plot(fwd_day_cnt, daily_deaths[N0:N], marker='s', color=(0.65, 0.0, 0.65), label="Denne mrtvi")  # increments of deaths
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
 # plot
+ystep = 1  # ticks on y axis after ystep (in thousands)
+ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
-plt.yticks(np.arange(0.0, 1.0e6, 5.0e2))
+plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
 plt.xlim(N0*1.0, N*1.05)
 plt.ylim(0.0, exponential(N*1.05, *abkumr))
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
 fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
 plt.show()
