@@ -69,7 +69,8 @@ abkute, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_tes
 
 abdena, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_sick        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdevy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_recovered        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abdemr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_deaths           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+# not working (does not make much sense with the current data):
+# abdemr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_deaths           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdete, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_tests           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 
 # VISUALIZATION
@@ -105,7 +106,8 @@ plt.plot(fwd_day_cnt, cumulative_deaths[N0:N], marker='+', color='k', label="Mrt
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abkumr), '--', color=(0.3, 0.3, 0.3), label="Exp. prolozeni celkove mrtvych")  # fit deaths
 # increments of daily deaths
 plt.plot(fwd_day_cnt, daily_deaths[N0:N], marker='s', color=(0.65, 0.0, 0.65), label="Denne mrtvi")  # increments of deaths
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
+# not needed:
+# plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
 # plot
 ystep = 1  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
