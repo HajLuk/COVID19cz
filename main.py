@@ -43,6 +43,7 @@ hosFile = open(hosDataFName)
 hospitaData = pd.read_csv(hosFile)
 hosShift = 34  # data for hospitalizations start 34 days later than everything else
 currently_hospitalized = np.hstack([np.zeros(hosShift), hospitaData['pocet_hosp'].values])
+currently_seriously_ill = np.hstack([np.zeros(hosShift), hospitaData['stav_tezky'].values])
 
 # variables for day counters
 N = len(cumulative_sick)  # size of our data
@@ -63,6 +64,7 @@ daily_deaths = np.zeros(N)
 daily_tests = np.zeros(N)
 currently_sick = np.zeros(N)
 hospitalized2Sick = np.zeros(N)
+seriously2Sick = np.zeros(N)
 for j in range(1, N):
     daily_sick[j] = cumulative_sick[j] - cumulative_sick[j - 1]
     daily_recovered[j] = cumulative_recovered[j] - cumulative_recovered[j - 1]
@@ -71,6 +73,8 @@ for j in range(1, N):
     currently_sick[j] = currently_sick[j - 1] + daily_sick[j] - daily_recovered[j] - daily_deaths[j]
     if currently_sick[j] > 0:
         hospitalized2Sick[j] = currently_hospitalized[j]/currently_sick[j]
+        seriously2Sick[j] = currently_seriously_ill[j]/currently_sick[j]
+
 
 # exponential fit for all our data: interpol_fun(x)=a*exp(b*x)
 ab, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_sick[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
@@ -138,15 +142,17 @@ fig2.show()
 
 # THIRD FIGURE (hospitalized-to-sick ratio)
 plt.figure(3)
-# cumulative deaths
-plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='k', label="Hospitalizovani ku nemocnym")
+# all hospitalized to sick
+plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
+# seriously ill to sick
+plt.plot(day_counter, seriously2Sick[1:N], marker='s', color='k', label="Vazne nemocni ku vsem nemocnym")
 # plot
 ystep = 0.05  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + " %" for i in range(0, 101, 5)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
 plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
 plt.xlim(N0*1.0, N*1.05)
-plt.ylim(0.0, 1.0)
+plt.ylim(0.0, 0.40)
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
