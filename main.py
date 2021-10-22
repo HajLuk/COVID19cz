@@ -81,8 +81,8 @@ for j in range(1, N):
     if currently_sick[j] > 0:
         hospitalized2Sick[j] = currently_hospitalized[j]/currently_sick[j]
         seriously2Sick[j] = currently_seriously_ill[j]/currently_sick[j]
-        medium2Sick[j] = currently_seriously_ill[j]/currently_sick[j]
-        mild2Sick[j] = currently_seriously_ill[j]/currently_sick[j]
+        medium2Sick[j] = currently_medium[j]/currently_sick[j]
+        mild2Sick[j] = currently_mild[j]/currently_sick[j]
         asymptomatic2Sick[j] = currently_asymptomatic[j]/currently_sick[j]
 
 
@@ -155,11 +155,11 @@ plt.figure(3)
 # all hospitalized to sick
 plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
 # seriously ill to sick
-plt.plot(day_counter, seriously2Sick[1:N], marker='s', color='k', label="Vazne nemocni ku vsem nemocnym")
+plt.plot(day_counter, seriously2Sick[1:N], marker='x', color='k', label="Vazne nemocni ku vsem nemocnym")
 # medium condition to sick
-plt.plot(day_counter, medium2Sick[1:N], marker='s', color='r', label="Stredne nemocni ku vsem nemocnym")
+plt.plot(day_counter, medium2Sick[1:N], marker='x', color='r', label="Stredne nemocni ku vsem nemocnym")
 # mild condition to sick
-plt.plot(day_counter, mild2Sick[1:N], marker='s', color='y', label="Lehce nemocni ku vsem nemocnym")
+plt.plot(day_counter, mild2Sick[1:N], marker='x', color='y', label="Lehce nemocni ku vsem nemocnym")
 # asymptomatic ill to sick
 plt.plot(day_counter, asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
 # plot
