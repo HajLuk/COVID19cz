@@ -62,12 +62,15 @@ daily_recovered = np.zeros(N)
 daily_deaths = np.zeros(N)
 daily_tests = np.zeros(N)
 currently_sick = np.zeros(N)
+hospitalized2Sick = np.zeros(N)
 for j in range(1, N):
     daily_sick[j] = cumulative_sick[j] - cumulative_sick[j - 1]
     daily_recovered[j] = cumulative_recovered[j] - cumulative_recovered[j - 1]
     daily_deaths[j] = cumulative_deaths[j] - cumulative_deaths[j - 1]
     daily_tests[j] = cumulative_tests[j] - cumulative_tests[j - 1]
     currently_sick[j] = currently_sick[j - 1] + daily_sick[j] - daily_recovered[j] - daily_deaths[j]
+    if currently_sick[j] > 0:
+        hospitalized2Sick[j] = currently_hospitalized[j]/currently_sick[j]
 
 # exponential fit for all our data: interpol_fun(x)=a*exp(b*x)
 ab, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_sick[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
@@ -111,13 +114,13 @@ fig_manager.resize(1820, 930)
 plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
 fig1.show()  # we have special name for it since we want it to be displayed alongside the other figure
 
-# SECOND FIGURE
-plt.figure(2)
+# SECOND FIGURE (deaths)
+fig2 = plt.figure(2)
 # cumulative deaths
-plt.plot(fwd_day_cnt, cumulative_deaths[N0:N], marker='+', color='k', label="Mrtvi celkem")  # deaths
+plt.plot(day_counter, cumulative_deaths[1:N], marker='+', color='k', label="Mrtvi celkem")  # deaths
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abkumr), '--', color=(0.3, 0.3, 0.3), label="Exp. prolozeni celkove mrtvych")  # fit deaths
 # increments of daily deaths
-plt.plot(fwd_day_cnt, daily_deaths[N0:N], marker='s', color=(0.65, 0.0, 0.65), label="Denne mrtvi")  # increments of deaths
+plt.plot(day_counter, daily_deaths[1:N], marker='s', color=(0.65, 0.0, 0.65), label="Denne mrtvi")  # increments of deaths
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
 # plot
 ystep = 1  # ticks on y axis after ystep (in thousands)
@@ -126,6 +129,24 @@ plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotati
 plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
 plt.xlim(N0*1.0, N*1.05)
 plt.ylim(0.0, max(exponential(N*1.05, *abkumr), 1.05*np.max(cumulative_deaths[N0:N])))
+plt.legend()
+plt.grid()
+fig_manager = plt.get_current_fig_manager()
+fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
+fig2.show()
+
+# THIRD FIGURE (hospitalized-to-sick ratio)
+plt.figure(3)
+# cumulative deaths
+plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='k', label="Hospitalizovani ku nemocnym")
+# plot
+ystep = 0.05  # ticks on y axis after ystep (in thousands)
+ylabel = [str(i) + " %" for i in range(0, 101, 5)]
+plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
+plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
+plt.xlim(N0*1.0, N*1.05)
+plt.ylim(0.0, 1.0)
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
