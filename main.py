@@ -44,6 +44,9 @@ hospitaData = pd.read_csv(hosFile)
 hosShift = 34  # data for hospitalizations start 34 days later than everything else
 currently_hospitalized = np.hstack([np.zeros(hosShift), hospitaData['pocet_hosp'].values])
 currently_seriously_ill = np.hstack([np.zeros(hosShift), hospitaData['stav_tezky'].values])
+currently_medium = np.hstack([np.zeros(hosShift), hospitaData['stav_stredni'].values])
+currently_mild = np.hstack([np.zeros(hosShift), hospitaData['stav_lehky'].values])
+currently_asymptomatic = np.hstack([np.zeros(hosShift), hospitaData['stav_bez_priznaku'].values])
 
 # variables for day counters
 N = len(cumulative_sick)  # size of our data
@@ -65,6 +68,10 @@ daily_tests = np.zeros(N)
 currently_sick = np.zeros(N)
 hospitalized2Sick = np.zeros(N)
 seriously2Sick = np.zeros(N)
+medium2Sick = np.zeros(N)
+mild2Sick = np.zeros(N)
+asymptomatic2Sick = np.zeros(N)
+
 for j in range(1, N):
     daily_sick[j] = cumulative_sick[j] - cumulative_sick[j - 1]
     daily_recovered[j] = cumulative_recovered[j] - cumulative_recovered[j - 1]
@@ -74,6 +81,9 @@ for j in range(1, N):
     if currently_sick[j] > 0:
         hospitalized2Sick[j] = currently_hospitalized[j]/currently_sick[j]
         seriously2Sick[j] = currently_seriously_ill[j]/currently_sick[j]
+        medium2Sick[j] = currently_seriously_ill[j]/currently_sick[j]
+        mild2Sick[j] = currently_seriously_ill[j]/currently_sick[j]
+        asymptomatic2Sick[j] = currently_asymptomatic[j]/currently_sick[j]
 
 
 # exponential fit for all our data: interpol_fun(x)=a*exp(b*x)
@@ -146,12 +156,18 @@ plt.figure(3)
 plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
 # seriously ill to sick
 plt.plot(day_counter, seriously2Sick[1:N], marker='s', color='k', label="Vazne nemocni ku vsem nemocnym")
+# medium condition to sick
+plt.plot(day_counter, medium2Sick[1:N], marker='s', color='r', label="Stredne nemocni ku vsem nemocnym")
+# mild condition to sick
+plt.plot(day_counter, mild2Sick[1:N], marker='s', color='y', label="Lehce nemocni ku vsem nemocnym")
+# asymptomatic ill to sick
+plt.plot(day_counter, asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
 # plot
 ystep = 0.05  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + " %" for i in range(0, 101, 5)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
 plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
-plt.xlim(N0*1.0, N*1.05)
+plt.xlim(N0*1.0, N*1.0)
 plt.ylim(0.0, 0.40)
 plt.legend()
 plt.grid()
