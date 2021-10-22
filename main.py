@@ -41,7 +41,8 @@ cumulative_tests = covid19Data['kumulativni_pocet_testu'].values
 
 hosFile = open(hosDataFName)
 hospitaData = pd.read_csv(hosFile)
-currently_hospitalized = hospitaData['pocet_hosp'].values
+hosShift = 34  # data for hospitalizations start 34 days later than everything else
+currently_hospitalized = np.hstack([np.zeros(hosShift), hospitaData['pocet_hosp'].values])
 
 # variables for day counters
 N = len(cumulative_sick)  # size of our data
@@ -70,6 +71,7 @@ for j in range(1, N):
 
 # exponential fit for all our data: interpol_fun(x)=a*exp(b*x)
 ab, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_sick[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abkuho, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_hospitalized[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abkuna, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_sick  [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abkuvy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_recovered  [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abkumr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_deaths     [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
@@ -86,6 +88,9 @@ fig1 = plt.figure(1)
 # currently sick
 plt.plot(day_counter, currently_sick[1:N], marker='x', color='r', label="Aktualne nakazeni")  # aktualne
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *ab), '--', color=(0.65, 0, 0), label="Exp. prolozeni aktualne nakazenych")  # fit current
+# currently hospitalized
+plt.plot(day_counter, currently_hospitalized[1:N], marker='s', color=(0.3, 0.3, 0.3), label="Aktualne hospitalizovani")  # aktualne
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abkuho), '--', color='k', label="Exp. prolozeni aktualne hospitalizovanych")  # fit current
 # daily tests
 plt.plot(day_counter, daily_tests[1:N], marker='D', color=(1.0, 0.6, 0.0), label="Denni testy")  # testy
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdete), '-.', color=(0.65, 0.3, 0.0), label="Exp. prolozeni dennich testu")  # fit tests
