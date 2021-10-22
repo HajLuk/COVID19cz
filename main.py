@@ -163,8 +163,8 @@ plt.plot(day_counter, mild2Sick[1:N], marker='s', color='y', label="Lehce nemocn
 # asymptomatic ill to sick
 plt.plot(day_counter, asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
 # plot
-ystep = 0.05  # ticks on y axis after ystep (in thousands)
-ylabel = [str(i) + " %" for i in range(0, 101, 5)]
+ystep = 0.01  # ticks on y axis after ystep (in thousands)
+ylabel = [str(i) + " %" for i in range(0, 101, 1)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
 plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
 plt.xlim(N0*1.0, N*1.0)
