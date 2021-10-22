@@ -11,8 +11,8 @@ def exponential(x, a, b):  # exponential for one value (used for interpolation)
     return a*np.exp(b*x)
 
 
-def expfig(x, a, b):  # exponential for set of values (used for visualizing of our interpolation function)
-    return [np.float64(a * np.exp(b * ix)) for ix in x]
+def expfig(x, xshift, a, b):  # exponential for set of values (used for visualizing of our interpolation function)
+    return [np.float64(a * np.exp(b * (ix-xshift))) for ix in x]
 
 
 # You might wanna change these as you see fit:
@@ -22,19 +22,19 @@ Nfit = N0 + 356  # previously N0+85, the "next wave" is N0+291 (June 26th 2021),
 days_step = 3  # should we show each day?
 
 # download the file (optional), open it and import its contents
-filename = 'covid19data.csv'
+c19DataFName = 'covid19data.csv'
 if download:
     url = 'https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/nakazeni-vyleceni-umrti-testy.csv'
     # data = urllib.URLopener()  # Python 2.7
     # data.retrieve(url, filename)  # Python 2.7
-    urllib.request.urlretrieve(url, filename)  # Python 3.7
+    urllib.request.urlretrieve(url, c19DataFName)  # Python 3.7
 
-c19file = open(filename)
-covid19data = pd.read_csv(c19file)
-cumulative_sick = covid19data['kumulativni_pocet_nakazenych'].values
-cumulative_recovered = covid19data['kumulativni_pocet_vylecenych'].values
-cumulative_deaths = covid19data['kumulativni_pocet_umrti'].values
-cumulative_tests = covid19data['kumulativni_pocet_testu'].values
+c19File = open(c19DataFName)
+covid19Data = pd.read_csv(c19File)
+cumulative_sick = covid19Data['kumulativni_pocet_nakazenych'].values
+cumulative_recovered = covid19Data['kumulativni_pocet_vylecenych'].values
+cumulative_deaths = covid19Data['kumulativni_pocet_umrti'].values
+cumulative_tests = covid19Data['kumulativni_pocet_testu'].values
 
 # variables for day counters
 N = len(cumulative_sick)  # size of our data
@@ -42,7 +42,8 @@ base = datetime.date(2020, 1, 27)  # the beginning of the data from mzcr.cz (27t
 cal = [base + datetime.timedelta(days=x) for x in range(2*N)]  # calendar from the beginning of the data
 day_counter = range(1, N)  # all days for which we have data
 fwd_day_cnt = range(N0, N)  # only the days that interest us
-fit_day_cnt = range(Nfit, N)  # only the days that interest us
+#fit_day_cnt = range(Nfit, N)  # only the days that interest us
+fit_day_cnt = range(0, N-Nfit)  # only the days that interest us
 exp_day_cnt = range(1, 2*N)  # days visualised with the exponential curve
 cal_day_cnt = [i.strftime("%d-%m-%y") for i in cal]  # dates of all days in a human-readable form
 sN = N - N0
@@ -69,8 +70,7 @@ abkute, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_tes
 
 abdena, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_sick        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdevy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_recovered        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-# not working (does not make much sense with the current data):
-# abdemr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_deaths           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdemr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_deaths           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdete, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_tests           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 
 # VISUALIZATION
@@ -78,20 +78,20 @@ abdete, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_tests   
 fig1 = plt.figure(1)
 # currently sick
 plt.plot(day_counter, currently_sick[1:N], marker='x', color='r', label="Aktualne nakazeni")  # aktualne
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, *ab), '--', color=(0.65, 0, 0), label="Exp. prolozeni aktualne nakazenych")  # fit current
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *ab), '--', color=(0.65, 0, 0), label="Exp. prolozeni aktualne nakazenych")  # fit current
 # daily tests
 plt.plot(day_counter, daily_tests[1:N], marker='D', color=(1.0, 0.6, 0.0), label="Denni testy")  # testy
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdete), '-.', color=(0.65, 0.3, 0.0), label="Exp. prolozeni dennich testu")  # fit tests
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdete), '-.', color=(0.65, 0.3, 0.0), label="Exp. prolozeni dennich testu")  # fit tests
 # increments
 plt.plot(day_counter, daily_sick[1:N], marker='o', color='b', label="Denni prirustky nakazenych")  # prirustky
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdena), '-.', color=(0, 0, 0.65), label="Exp. prolozeni prirustku nakazenych")  # fit increments
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdena), '-.', color=(0, 0, 0.65), label="Exp. prolozeni prirustku nakazenych")  # fit increments
 # plot
 ystep = 5  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
 plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
 plt.xlim(N0*1.0, N*1.05)
-plt.ylim(0.0, max(exponential(N*1.05, *ab), 1.05*np.max(currently_sick[1:N])))
+plt.ylim(0.0, max(exponential((N-Nfit)*1.05, *ab), 1.05*np.max(currently_sick[1:N])))
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
@@ -103,11 +103,10 @@ fig1.show()  # we have special name for it since we want it to be displayed alon
 plt.figure(2)
 # cumulative deaths
 plt.plot(fwd_day_cnt, cumulative_deaths[N0:N], marker='+', color='k', label="Mrtvi celkem")  # deaths
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abkumr), '--', color=(0.3, 0.3, 0.3), label="Exp. prolozeni celkove mrtvych")  # fit deaths
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abkumr), '--', color=(0.3, 0.3, 0.3), label="Exp. prolozeni celkove mrtvych")  # fit deaths
 # increments of daily deaths
 plt.plot(fwd_day_cnt, daily_deaths[N0:N], marker='s', color=(0.65, 0.0, 0.65), label="Denne mrtvi")  # increments of deaths
-# not needed:
-# plt.plot(exp_day_cnt, expfig(exp_day_cnt, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
 # plot
 ystep = 1  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
