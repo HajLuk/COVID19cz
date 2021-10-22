@@ -23,11 +23,14 @@ days_step = 3  # should we show each day?
 
 # download the file (optional), open it and import its contents
 c19DataFName = 'covid19data.csv'
+hosDataFName = 'hospitadata.csv'
 if download:
     url = 'https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/nakazeni-vyleceni-umrti-testy.csv'
     # data = urllib.URLopener()  # Python 2.7
     # data.retrieve(url, filename)  # Python 2.7
     urllib.request.urlretrieve(url, c19DataFName)  # Python 3.7
+    url = 'https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/hospitalizace.csv'
+    urllib.request.urlretrieve(url, hosDataFName)
 
 c19File = open(c19DataFName)
 covid19Data = pd.read_csv(c19File)
@@ -35,6 +38,10 @@ cumulative_sick = covid19Data['kumulativni_pocet_nakazenych'].values
 cumulative_recovered = covid19Data['kumulativni_pocet_vylecenych'].values
 cumulative_deaths = covid19Data['kumulativni_pocet_umrti'].values
 cumulative_tests = covid19Data['kumulativni_pocet_testu'].values
+
+hosFile = open(hosDataFName)
+hospitaData = pd.read_csv(hosFile)
+currently_hospitalized = hospitaData['pocet_hosp'].values
 
 # variables for day counters
 N = len(cumulative_sick)  # size of our data
