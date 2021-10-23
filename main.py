@@ -88,7 +88,12 @@ for j in range(1, N):
 
 # exponential fit for all our data: interpol_fun(x)=a*exp(b*x)
 ab, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_sick[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abkuho, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_hospitalized[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhoce, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_hospitalized[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhova, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_seriously_ill[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhost, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_medium[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhole, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_mild[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhobe, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_asymptomatic[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+
 abkuna, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_sick  [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abkuvy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_recovered  [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abkumr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_deaths     [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
@@ -107,7 +112,7 @@ plt.plot(day_counter, currently_sick[1:N], marker='x', color='r', label="Aktualn
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *ab), '--', color=(0.65, 0, 0), label="Exp. prolozeni aktualne nakazenych")  # fit current
 # currently hospitalized
 plt.plot(day_counter, currently_hospitalized[1:N], marker='s', color=(0.3, 0.3, 0.3), label="Aktualne hospitalizovani")  # aktualne
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abkuho), '--', color='k', label="Exp. prolozeni aktualne hospitalizovanych")  # fit current
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abhoce), '--', color='k', label="Exp. prolozeni aktualne hospitalizovanych")  # fit current
 # daily tests
 plt.plot(day_counter, daily_tests[1:N], marker='D', color=(1.0, 0.6, 0.0), label="Denni testy")  # testy
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdete), '-.', color=(0.65, 0.3, 0.0), label="Exp. prolozeni dennich testu")  # fit tests
@@ -151,7 +156,7 @@ plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hs
 fig2.show()
 
 # THIRD FIGURE (hospitalized-to-sick ratio)
-plt.figure(3)
+fig3 = plt.figure(3)
 # all hospitalized to sick
 plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
 # seriously ill to sick
@@ -169,6 +174,55 @@ plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotati
 plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
 plt.xlim(N0*1.0, N*1.0)
 plt.ylim(0.0, 0.40)
+plt.legend()
+plt.grid()
+fig_manager = plt.get_current_fig_manager()
+fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
+fig3.show()
+
+# FOURTH FIGURE (hospitalized)
+plt.figure(4)
+# + seriously ill
+y_data1 = currently_seriously_ill[1:N]
+y_inter = np.array(expfig(exp_day_cnt, Nfit, *abhova))
+y_extrap1 = np.array(expfig(exp_day_cnt[N-2:], Nfit, *abhova))
+plt.fill_between(day_counter, y_data1, color=(0.3, 0.1, 0.1), label="Hospitalizovani ve vaznem stavu")
+plt.plot(exp_day_cnt, y_inter, '--', color='k', label="Exp. prolozeni hospit. ve vaznem st.")
+plt.fill_between(exp_day_cnt[N-2:], y_extrap1, color=(0.3, 0.1, 0.1), alpha=0.7)
+# + medium symptoms
+y_data2 = y_data1 + currently_medium[1:N]
+y_inter += np.array(expfig(exp_day_cnt, Nfit, *abhost))
+y_extrap2 = y_extrap1 + np.array((expfig(exp_day_cnt[N-2:], Nfit, *abhost)))
+plt.fill_between(day_counter, y_data1, y_data2, color='r', label="Hospitalizovani se stredne tezkymi priznaky")
+plt.plot(exp_day_cnt, y_inter, '--', color=(0.7, 0.0, 0.0), label="Exp. prolozeni hospit. se strednimi prizn. a hure")
+plt.fill_between(exp_day_cnt[N-2:], y_extrap1, y_extrap2, color='r', alpha=0.7)
+y_data1 = y_data2
+y_extrap1 = y_extrap2
+# + mild symptoms
+y_data2 = y_data1 + currently_mild[1:N]
+y_inter += np.array(expfig(exp_day_cnt, Nfit, *abhole))
+y_extrap2 = y_extrap1 + np.array((expfig(exp_day_cnt[N-2:], Nfit, *abhole)))
+plt.fill_between(day_counter, y_data1, y_data2, color='y', label="Hospitalizovani s lehkymi priznaky")
+plt.plot(exp_day_cnt, y_inter, '--', color=(0.5, 0.5, 0.0), label="Exp. prolozeni hospit. s lehkymi prizn. a hure")
+plt.fill_between(exp_day_cnt[N-2:], y_extrap1, y_extrap2, color='y', alpha=0.7)
+y_data1 = y_data2
+y_extrap1 = y_extrap2
+# no symptoms
+y_data2 = y_data1 + currently_asymptomatic[1:N]
+y_inter += np.array(expfig(exp_day_cnt, Nfit, *abhobe))
+y_extrap2 = y_extrap1 + np.array((expfig(exp_day_cnt[N-2:], Nfit, *abhobe)))
+plt.fill_between(day_counter, y_data1, y_data2, color='g', label="Hospitalizovani bez priznaku")
+plt.plot(exp_day_cnt, y_inter, '--', color=(0.0, 0.5, 0.0), label="Exp. prolozeni hospit. bezpriznakovych a hure")
+plt.fill_between(exp_day_cnt[N-2:], y_extrap1, y_extrap2, color='g', alpha=0.7)
+# all (not shown – almost exactly the same as the previous curve)
+# plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abhoce), '--', color="k", label="Exp. prolozeni vsech momentalne hospit.")
+# plot
+ystep = 200  # ticks on y axis after ystep
+plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
+plt.yticks(np.arange(0.0, 1.0e5, ystep))
+plt.xlim(N0*1.0, N*1.05)
+plt.ylim(0.0, max(0.0*exponential(N*1.05, *abhoce), 1.05*np.max(currently_hospitalized[N0:N])))
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
