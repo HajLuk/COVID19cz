@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from scipy.optimize import curve_fit
 import numpy as np
 import urllib.request
-import pandas as pd
+from pandas import read_csv
 import datetime
 from datetime import date
 
@@ -33,14 +34,14 @@ if download:
     urllib.request.urlretrieve(url, hosDataFName)
 
 c19File = open(c19DataFName)
-covid19Data = pd.read_csv(c19File)
+covid19Data = read_csv(c19File)
 cumulative_sick = covid19Data['kumulativni_pocet_nakazenych'].values
 cumulative_recovered = covid19Data['kumulativni_pocet_vylecenych'].values
 cumulative_deaths = covid19Data['kumulativni_pocet_umrti'].values
 cumulative_tests = covid19Data['kumulativni_pocet_testu'].values
 
 hosFile = open(hosDataFName)
-hospitaData = pd.read_csv(hosFile)
+hospitaData = read_csv(hosFile)
 hosShift = 34  # data for hospitalizations start 34 days later than everything else
 currently_hospitalized = np.hstack([np.zeros(hosShift), hospitaData['pocet_hosp'].values])
 currently_seriously_ill = np.hstack([np.zeros(hosShift), hospitaData['stav_tezky'].values])
@@ -65,18 +66,24 @@ daily_sick = np.zeros(N)
 daily_recovered = np.zeros(N)
 daily_deaths = np.zeros(N)
 daily_tests = np.zeros(N)
+daily_negative_tests = np.zeros(N)
 currently_sick = np.zeros(N)
+
 hospitalized2Sick = np.zeros(N)
 seriously2Sick = np.zeros(N)
 medium2Sick = np.zeros(N)
 mild2Sick = np.zeros(N)
 asymptomatic2Sick = np.zeros(N)
+lethality = np.zeros(N)
+daily_positivity = np.zeros(N)
+daily_negativity = np.zeros(N)
 
 for j in range(1, N):
     daily_sick[j] = cumulative_sick[j] - cumulative_sick[j - 1]
     daily_recovered[j] = cumulative_recovered[j] - cumulative_recovered[j - 1]
     daily_deaths[j] = cumulative_deaths[j] - cumulative_deaths[j - 1]
     daily_tests[j] = cumulative_tests[j] - cumulative_tests[j - 1]
+    daily_negative_tests[j] = daily_tests[j] - daily_sick[j]
     currently_sick[j] = currently_sick[j - 1] + daily_sick[j] - daily_recovered[j] - daily_deaths[j]
     if currently_sick[j] > 0:
         hospitalized2Sick[j] = currently_hospitalized[j]/currently_sick[j]
@@ -84,41 +91,49 @@ for j in range(1, N):
         medium2Sick[j] = currently_medium[j]/currently_sick[j]
         mild2Sick[j] = currently_mild[j]/currently_sick[j]
         asymptomatic2Sick[j] = currently_asymptomatic[j]/currently_sick[j]
+        lethality[j] = daily_deaths[j]/currently_sick[j]
+    if daily_tests[j] > 0:
+        daily_positivity[j] = daily_sick[j]/daily_tests[j]
+        daily_negativity[j] = daily_negative_tests[j]/daily_tests[j]
 
 
 # exponential fit for all our data: interpol_fun(x)=a*exp(b*x)
-ab, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_sick[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abhoce, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_hospitalized[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+ab,     trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_sick         [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhoce, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_hospitalized [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abhova, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_seriously_ill[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abhost, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_medium[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abhole, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_mild[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abhobe, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_asymptomatic[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhost, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_medium       [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhole, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_mild         [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abhobe, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_asymptomatic [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 
-abkuna, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_sick  [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abkuvy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_recovered  [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abkumr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_deaths     [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abkute, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_tests     [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abkuna, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_sick        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abkuvy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_recovered   [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abkumr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_deaths      [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abkute, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_tests       [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 
-abdena, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_sick        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdena, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_sick             [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdene, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_negative_tests   [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdevy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_recovered        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdemr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_deaths           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
-abdete, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_tests           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdete, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_tests            [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 
 # VISUALIZATION
 # FIRST FIGURE
-fig1 = plt.figure(1)
+fig1 = plt.figure("Základní přehled")
 # currently sick
 plt.plot(day_counter, currently_sick[1:N], marker='x', color='r', label="Aktualne nakazeni")  # aktualne
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *ab), '--', color=(0.65, 0, 0), label="Exp. prolozeni aktualne nakazenych")  # fit current
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *ab), '--', color=(0.65, 0.0, 0.0), label="Exp. prolozeni aktualne nakazenych")  # fit current
 # currently hospitalized
 plt.plot(day_counter, currently_hospitalized[1:N], marker='s', color=(0.3, 0.3, 0.3), label="Aktualne hospitalizovani")  # aktualne
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abhoce), '--', color='k', label="Exp. prolozeni aktualne hospitalizovanych")  # fit current
 # daily tests
 plt.plot(day_counter, daily_tests[1:N], marker='D', color=(1.0, 0.6, 0.0), label="Denni testy")  # testy
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdete), '-.', color=(0.65, 0.3, 0.0), label="Exp. prolozeni dennich testu")  # fit tests
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdete), linestyle=(0, (4, 6, 1, 6)), color=(0.65, 0.3, 0.0), label="Exp. prolozeni dennich testu")  # fit tests
 # increments
 plt.plot(day_counter, daily_sick[1:N], marker='o', color='b', label="Denni prirustky nakazenych")  # prirustky
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdena), '-.', color=(0, 0, 0.65), label="Exp. prolozeni prirustku nakazenych")  # fit increments
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdena), '-.', color=(0.0, 0.0, 0.65), label="Exp. prolozeni prirustku nakazenych")  # fit increments
+# daily negative
+#plt.plot(day_counter, daily_negative_tests[1:N], marker='1', color='g', label="Negativni testy za den")  # prirustky
+#plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdene), linestyle=(0, (5, 10)), color=(0.0, 0.65, 0.), label="Exp. prolozeni dennich neg. testu")  # fit increments
 # plot
 ystep = 5  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
@@ -134,18 +149,21 @@ plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hs
 fig1.show()  # we have special name for it since we want it to be displayed alongside the other figure
 
 # SECOND FIGURE (deaths)
-fig2 = plt.figure(2)
+fig2 = plt.figure("Mrtví")
 # cumulative deaths
 plt.plot(day_counter, cumulative_deaths[1:N], marker='+', color='k', label="Mrtvi celkem")  # deaths
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abkumr), '--', color=(0.3, 0.3, 0.3), label="Exp. prolozeni celkove mrtvych")  # fit deaths
-# increments of daily deaths
+# daily deaths
 plt.plot(day_counter, daily_deaths[1:N], marker='s', color=(0.65, 0.0, 0.65), label="Denne mrtvi")  # increments of deaths
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
+# daily recovered
+#plt.plot(day_counter, daily_recovered[1:N], marker='o', color='g', label="Denne vyleceni")  # increments of deaths
+#plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdevy), '-.', color=(0.0, 0.65, 0.0), label="Exp. prolozeni denne vylecenych")  # fit increments of deaths
 # plot
 ystep = 1  # ticks on y axis after ystep (in thousands)
-ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
+#ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
-plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
+#plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
 plt.xlim(N0*1.0, N*1.05)
 plt.ylim(0.0, max(exponential(N*1.05, *abkumr), 1.05*np.max(cumulative_deaths[N0:N])))
 plt.legend()
@@ -155,34 +173,8 @@ fig_manager.resize(1820, 930)
 plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
 fig2.show()
 
-# THIRD FIGURE (hospitalized-to-sick ratio)
-fig3 = plt.figure(3)
-# all hospitalized to sick
-plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
-# seriously ill to sick
-plt.plot(day_counter, seriously2Sick[1:N], marker='x', color='k', label="Vazne nemocni ku vsem nemocnym")
-# medium condition to sick
-plt.plot(day_counter, medium2Sick[1:N], marker='x', color='r', label="Stredne nemocni ku vsem nemocnym")
-# mild condition to sick
-plt.plot(day_counter, mild2Sick[1:N], marker='x', color='y', label="Lehce nemocni ku vsem nemocnym")
-# asymptomatic ill to sick
-plt.plot(day_counter, asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
-# plot
-ystep = 0.01  # ticks on y axis after ystep (in thousands)
-ylabel = [str(i) + " %" for i in range(0, 101, 1)]
-plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
-plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
-plt.xlim(N0*1.0, N*1.0)
-plt.ylim(0.0, 0.40)
-plt.legend()
-plt.grid()
-fig_manager = plt.get_current_fig_manager()
-fig_manager.resize(1820, 930)
-plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
-fig3.show()
-
 # FOURTH FIGURE (hospitalized)
-plt.figure(4)
+fig3 = plt.figure("Hospitalizace")
 # + seriously ill
 y_data1 = currently_seriously_ill[1:N]
 y_inter = np.array(expfig(exp_day_cnt, Nfit, *abhova))
@@ -223,6 +215,59 @@ plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotati
 plt.yticks(np.arange(0.0, 1.0e5, ystep))
 plt.xlim(N0*1.0, N*1.05)
 plt.ylim(0.0, max(0.0*exponential(N*1.05, *abhoce), 1.05*np.max(currently_hospitalized[N0:N])))
+plt.legend()
+plt.grid()
+fig_manager = plt.get_current_fig_manager()
+fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
+fig3.show()
+
+# THIRD FIGURE (hospitalized-to-sick ratio)
+fig4 = plt.figure("Vážnost onemocnění")
+# all hospitalized to sick
+plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
+# seriously ill to sick
+plt.plot(day_counter, seriously2Sick[1:N], marker='x', color='k', label="Vazne nemocni ku vsem nemocnym")
+# medium condition to sick
+plt.plot(day_counter, medium2Sick[1:N], marker='x', color='r', label="Stredne nemocni ku vsem nemocnym")
+# mild condition to sick
+plt.plot(day_counter, mild2Sick[1:N], marker='x', color='y', label="Lehce nemocni ku vsem nemocnym")
+# asymptomatic ill to sick
+plt.plot(day_counter, asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
+# plot
+ystep = 0.01  # ticks on y axis after ystep (in thousands)
+ylabel = [str(i) + " %" for i in range(0, 101, 1)]
+plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
+plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
+plt.xlim(N0*1.0, N*1.0)
+plt.ylim(0.0, 0.40)
+plt.legend()
+plt.grid()
+fig_manager = plt.get_current_fig_manager()
+fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
+fig4.show()
+
+
+# FIFTH FIGURE (lethality, positivity and other ratios)
+plt.figure("Smrtnost, pozitivita…")
+plt.plot(day_counter, 100*daily_sick[1:N]/max(daily_sick), marker='x', color='r', label="Podil nakazenych denne oproti maximu")  # deaths
+plt.plot(day_counter, 100*daily_deaths[1:N]/max(daily_deaths), marker='+', color='k', label="Podil mrtvych denne oproti maximu")  # deaths
+plt.plot(day_counter, 100*lethality[1:N], marker='h', color=(0.65, 0.0, 0.65), label="Denni smrtnost")  # deaths
+plt.plot(day_counter, 100*daily_positivity[1:N], marker='2', color='b', label="Podil denne pozitivnich testu")  # deaths
+#plt.plot(day_counter, daily_negativity[1:N], marker='1', color='g', label="Podil denne negativnich testu")  # deaths
+# all (not shown – almost exactly the same as the previous curve)
+# plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abhoce), '--', color="k", label="Exp. prolozeni vsech momentalne hospit.")
+# plot
+#ystep = 0.02  # ticks on y axis after ystep (in thousands)
+#ylabel = [str(i) + " %" for i in range(0, 101, 2)]
+plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
+#plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
+ax = plt.gca()
+ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+ax.yaxis.set_major_locator(plt.MaxNLocator(50))
+plt.xlim(N0*1.0, N*1.0)
+plt.ylim(0.0, 100.00001)
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
