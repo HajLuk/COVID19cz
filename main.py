@@ -55,7 +55,6 @@ base = datetime.date(2020, 1, 27)  # the beginning of the data from mzcr.cz (27t
 cal = [base + datetime.timedelta(days=x) for x in range(2*N)]  # calendar from the beginning of the data
 day_counter = range(1, N)  # all days for which we have data
 fwd_day_cnt = range(N0, N)  # only the days that interest us
-#fit_day_cnt = range(Nfit, N)  # only the days that interest us
 fit_day_cnt = range(0, N-Nfit)  # only the days that interest us
 exp_day_cnt = range(1, 2*N)  # days visualised with the exponential curve
 cal_day_cnt = [i.strftime("%d-%m-%y") for i in cal]  # dates of all days in a human-readable form
@@ -131,9 +130,6 @@ plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdete), linestyle=(0, (4, 6, 1
 # increments
 plt.plot(day_counter, daily_sick[1:N], marker='o', color='b', label="Denni prirustky nakazenych")  # prirustky
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdena), '-.', color=(0.0, 0.0, 0.65), label="Exp. prolozeni prirustku nakazenych")  # fit increments
-# daily negative
-#plt.plot(day_counter, daily_negative_tests[1:N], marker='1', color='g', label="Negativni testy za den")  # prirustky
-#plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdene), linestyle=(0, (5, 10)), color=(0.0, 0.65, 0.), label="Exp. prolozeni dennich neg. testu")  # fit increments
 # plot
 ystep = 5  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
@@ -156,14 +152,9 @@ plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abkumr), '--', color=(0.3, 0.3,
 # daily deaths
 plt.plot(day_counter, daily_deaths[1:N], marker='s', color=(0.65, 0.0, 0.65), label="Denne mrtvi")  # increments of deaths
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdemr), '-.', color=(0.35, 0.05, 0.35), label="Exp. prolozeni denne mrtvych")  # fit increments of deaths
-# daily recovered
-#plt.plot(day_counter, daily_recovered[1:N], marker='o', color='g', label="Denne vyleceni")  # increments of deaths
-#plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdevy), '-.', color=(0.0, 0.65, 0.0), label="Exp. prolozeni denne vylecenych")  # fit increments of deaths
 # plot
 ystep = 1  # ticks on y axis after ystep (in thousands)
-#ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
-#plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
 plt.xlim(N0*1.0, N*1.05)
 plt.ylim(0.0, max(exponential(N*1.05, *abkumr), 1.05*np.max(cumulative_deaths[N0:N])))
 plt.legend()
@@ -207,8 +198,6 @@ y_extrap2 = y_extrap1 + np.array((expfig(exp_day_cnt[N-2:], Nfit, *abhobe)))
 plt.fill_between(day_counter, y_data1, y_data2, color='g', label="Hospitalizovani bez priznaku")
 plt.plot(exp_day_cnt, y_inter, '--', color=(0.0, 0.5, 0.0), label="Exp. prolozeni hospit. bezpriznakovych a hure")
 plt.fill_between(exp_day_cnt[N-2:], y_extrap1, y_extrap2, color='g', alpha=0.7)
-# all (not shown – almost exactly the same as the previous curve)
-# plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abhoce), '--', color="k", label="Exp. prolozeni vsech momentalne hospit.")
 # plot
 ystep = 200  # ticks on y axis after ystep
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
@@ -225,22 +214,22 @@ fig3.show()
 # THIRD FIGURE (hospitalized-to-sick ratio)
 fig4 = plt.figure("Vážnost onemocnění")
 # all hospitalized to sick
-plt.plot(day_counter, hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
+plt.plot(day_counter, 100*hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
 # seriously ill to sick
-plt.plot(day_counter, seriously2Sick[1:N], marker='x', color='k', label="Vazne nemocni ku vsem nemocnym")
+plt.plot(day_counter, 100*seriously2Sick[1:N], marker='x', color='k', label="Vazne nemocni ku vsem nemocnym")
 # medium condition to sick
-plt.plot(day_counter, medium2Sick[1:N], marker='x', color='r', label="Stredne nemocni ku vsem nemocnym")
+plt.plot(day_counter, 100*medium2Sick[1:N], marker='x', color='r', label="Stredne nemocni ku vsem nemocnym")
 # mild condition to sick
-plt.plot(day_counter, mild2Sick[1:N], marker='x', color='y', label="Lehce nemocni ku vsem nemocnym")
+plt.plot(day_counter, 100*mild2Sick[1:N], marker='x', color='y', label="Lehce nemocni ku vsem nemocnym")
 # asymptomatic ill to sick
-plt.plot(day_counter, asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
+plt.plot(day_counter, 100*asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
 # plot
-ystep = 0.01  # ticks on y axis after ystep (in thousands)
-ylabel = [str(i) + " %" for i in range(0, 101, 1)]
+ax = plt.gca()
+ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+ax.yaxis.set_major_locator(plt.MaxNLocator(50))
+plt.ylim(0.0, 30.00001)
 plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
-plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
 plt.xlim(N0*1.0, N*1.0)
-plt.ylim(0.0, 0.40)
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
@@ -255,19 +244,13 @@ plt.plot(day_counter, 100*daily_sick[1:N]/max(daily_sick), marker='x', color='r'
 plt.plot(day_counter, 100*daily_deaths[1:N]/max(daily_deaths), marker='+', color='k', label="Podil mrtvych denne oproti maximu")  # deaths
 plt.plot(day_counter, 100*lethality[1:N], marker='h', color=(0.65, 0.0, 0.65), label="Denni smrtnost")  # deaths
 plt.plot(day_counter, 100*daily_positivity[1:N], marker='2', color='b', label="Podil denne pozitivnich testu")  # deaths
-#plt.plot(day_counter, daily_negativity[1:N], marker='1', color='g', label="Podil denne negativnich testu")  # deaths
-# all (not shown – almost exactly the same as the previous curve)
-# plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abhoce), '--', color="k", label="Exp. prolozeni vsech momentalne hospit.")
 # plot
-#ystep = 0.02  # ticks on y axis after ystep (in thousands)
-#ylabel = [str(i) + " %" for i in range(0, 101, 2)]
-plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
-#plt.yticks(np.arange(0.0, 1.01, ystep), ylabel)
 ax = plt.gca()
 ax.yaxis.set_major_formatter(ticker.PercentFormatter())
 ax.yaxis.set_major_locator(plt.MaxNLocator(50))
-plt.xlim(N0*1.0, N*1.0)
 plt.ylim(0.0, 100.00001)
+plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
+plt.xlim(N0*1.0, N*1.0)
 plt.legend()
 plt.grid()
 fig_manager = plt.get_current_fig_manager()
