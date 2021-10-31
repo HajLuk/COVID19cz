@@ -216,14 +216,16 @@ fig3.show()
 fig4 = plt.figure("Vážnost onemocnění")
 # all hospitalized to sick
 plt.plot(day_counter, 100*hospitalized2Sick[1:N], marker='+', color='b', label="Vsichni hospitalizovani ku nemocnym")
-# seriously ill to sick
-plt.plot(day_counter, 100*seriously2Sick[1:N], marker='x', color='k', label="Vazne nemocni ku vsem nemocnym")
-# medium condition to sick
-plt.plot(day_counter, 100*medium2Sick[1:N], marker='x', color='r', label="Stredne nemocni ku vsem nemocnym")
-# mild condition to sick
-plt.plot(day_counter, 100*mild2Sick[1:N], marker='x', color='y', label="Lehce nemocni ku vsem nemocnym")
 # asymptomatic ill to sick
 plt.plot(day_counter, 100*asymptomatic2Sick[1:N], marker='o', color='g', label="Bezpriznakovi ku vsem nemocnym")
+# mild condition to sick
+plt.plot(day_counter, 100*mild2Sick[1:N], marker='x', color='y', label="Lehce nemocni ku vsem nemocnym")
+# medium condition to sick
+plt.plot(day_counter, 100*medium2Sick[1:N], marker='x', color='r', label="Stredne nemocni ku vsem nemocnym")
+# seriously ill to sick
+plt.plot(day_counter, 100*seriously2Sick[1:N], marker='x', color=(0.65, 0.0, 0.65), label="Vazne nemocni ku vsem nemocnym")
+# lethality (deaths to sick)
+plt.plot(day_counter, 100*lethality[1:N], marker='h', color='k', label="Denni smrtnost")
 # plot
 ax = plt.gca()
 ax.yaxis.set_major_formatter(ticker.PercentFormatter())
@@ -240,10 +242,9 @@ fig4.show()
 
 
 # FIFTH FIGURE (lethality, positivity and other ratios)
-plt.figure("Smrtnost, pozitivita…")
+plt.figure("Pozitivita a prodleva mezi testováním a úmrtími")
 plt.plot(day_counter, 100*daily_sick[1:N]/max(daily_sick), marker='x', color='r', label="Podil nakazenych denne oproti maximu")  # deaths
 plt.plot(day_counter, 100*daily_deaths[1:N]/max(daily_deaths), marker='+', color='k', label="Podil mrtvych denne oproti maximu")  # deaths
-plt.plot(day_counter, 100*lethality[1:N], marker='h', color=(0.65, 0.0, 0.65), label="Denni smrtnost")  # deaths
 plt.plot(day_counter, 100*daily_positivity[1:N], marker='2', color='b', label="Podil denne pozitivnich testu")  # deaths
 # plot
 ax = plt.gca()
