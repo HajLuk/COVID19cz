@@ -1,3 +1,6 @@
+figs/
+data.pckl
+
 # Project exclude paths
 /venv/
 
