@@ -69,6 +69,14 @@ def plot_data2(dataframe, filename=False, display=False):
     plt.legend()
     return fig
 
+def robot_export(path=False):
+    path = path if path else FIG_PATH
+
+    dataframe = download_data(data_path="data.pckl")
+
+    plot_data1(dataframe, display=True, filename="plot1.png")
+    plot_data2(dataframe, display=True)
+
 
 FIG_PATH = os.path.join("figs")
 
