@@ -109,8 +109,8 @@ def basic_view(dataframe, **kwargs):
     plt.xticks(rotation=90)
     plt.grid()
     plt.legend()
-    plt.tight_layout()
     ax.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, p: "{}k".format(int(int(x) / 1000))))
+    plt.tight_layout()
     return fig
 
 
