@@ -1,4 +1,6 @@
-figs/
+figs/*
+!figs/.keep
+
 data.pckl
 
 # Project exclude paths
