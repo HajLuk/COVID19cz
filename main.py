@@ -49,6 +49,7 @@ currently_medium = np.hstack([np.zeros(hosShift), hospitaData['stav_stredni'].va
 currently_mild = np.hstack([np.zeros(hosShift), hospitaData['stav_lehky'].values])
 currently_asymptomatic = np.hstack([np.zeros(hosShift), hospitaData['stav_bez_priznaku'].values])
 
+
 # variables for day counters
 N = len(cumulative_sick)  # size of our data
 base = datetime.date(2020, 1, 27)  # the beginning of the data from mzcr.cz (27th of January)
@@ -62,6 +63,9 @@ sN = N - N0
 
 # allocate and calculate all the data that are not part of our file from mzcr.cz
 daily_sick = np.zeros(N)
+daily_week_incidency = np.zeros(N)
+d_daily_week_incidency =  np.full(N, np.nan)
+d2_daily_week_incidency = np.full(N, np.nan)
 daily_recovered = np.zeros(N)
 daily_deaths = np.zeros(N)
 daily_tests = np.zeros(N)
@@ -79,6 +83,12 @@ daily_negativity = np.zeros(N)
 
 for j in range(1, N):
     daily_sick[j] = cumulative_sick[j] - cumulative_sick[j - 1]
+    if j > 5:
+        daily_week_incidency[j] = np.sum(daily_sick[j-6:j+1]) / 7
+    if j > 30:
+        d_daily_week_incidency[j-6] = (daily_week_incidency[j] - daily_week_incidency[j-13]) / 14
+    if j > 60:
+        d2_daily_week_incidency[j-7] = (d_daily_week_incidency[j-6] - d_daily_week_incidency[j - 8]) / 2
     daily_recovered[j] = cumulative_recovered[j] - cumulative_recovered[j - 1]
     daily_deaths[j] = cumulative_deaths[j] - cumulative_deaths[j - 1]
     daily_tests[j] = cumulative_tests[j] - cumulative_tests[j - 1]
@@ -98,6 +108,13 @@ for j in range(1, N):
 
 # exponential fit for all our data: interpol_fun(x)=a*exp(b*x)
 ab,     trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_sick         [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+
+abinc,     trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_week_incidency         [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abincp,     trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-6], ydata=daily_week_incidency         [Nfit:N + 1 - 7], p0=[0, 0], bounds=(-np.inf, np.inf))
+abincpp,     trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-13], ydata=daily_week_incidency         [Nfit:N + 1 - 14], p0=[0, 0], bounds=(-np.inf, np.inf))
+abincppp,     trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-20], ydata=daily_week_incidency         [Nfit:N + 1 - 21], p0=[0, 0], bounds=(-np.inf, np.inf))
+abincpppp,     trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-27], ydata=daily_week_incidency         [Nfit:N + 1 - 28], p0=[0, 0], bounds=(-np.inf, np.inf))
+
 abhoce, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_hospitalized [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abhova, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_seriously_ill[Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abhost, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=currently_medium       [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
@@ -110,6 +127,10 @@ abkumr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_dea
 abkute, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=cumulative_tests       [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 
 abdena, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_sick             [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdenap, trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-6], ydata=daily_sick             [Nfit:N + 1 - 7], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdenapp, trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-13], ydata=daily_sick             [Nfit:N + 1 - 14], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdenappp, trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-20], ydata=daily_sick             [Nfit:N + 1 - 21], p0=[0, 0], bounds=(-np.inf, np.inf))
+abdenapppp, trash = curve_fit(f=exponential, xdata=fit_day_cnt[:-27], ydata=daily_sick             [Nfit:N + 1 - 28], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdene, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_negative_tests   [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdevy, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_recovered        [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
 abdemr, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_deaths           [Nfit:N + 1], p0=[0, 0], bounds=(-np.inf, np.inf))
@@ -120,7 +141,7 @@ abdete, trash = curve_fit(f=exponential, xdata=fit_day_cnt, ydata=daily_tests   
 fig1 = plt.figure("Základní přehled")
 # currently sick
 plt.plot(day_counter, currently_sick[1:N], marker='x', color='r', label="Aktualne nakazeni")  # aktualne
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *ab), '--', color=(0.65, 0.0, 0.0), label="Exp. prolozeni aktualne nakazenych")  # fit current
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *ab), '--', color="#ff0000", label="Exp. prolozeni aktualne nakazenych")  # fit current
 # currently hospitalized
 plt.plot(day_counter, currently_hospitalized[1:N], marker='s', color=(0.3, 0.3, 0.3), label="Aktualne hospitalizovani")  # aktualne
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abhoce), '--', color='k', label="Exp. prolozeni aktualne hospitalizovanych")  # fit current
@@ -129,7 +150,8 @@ plt.plot(day_counter, daily_tests[1:N], marker='D', color=(1.0, 0.6, 0.0), label
 plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdete), linestyle=(0, (4, 6, 1, 6)), color=(0.65, 0.3, 0.0), label="Exp. prolozeni dennich testu")  # fit tests
 # increments
 plt.plot(day_counter, daily_sick[1:N], marker='o', color='b', label="Denni prirustky nakazenych")  # prirustky
-plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdena), '-.', color=(0.0, 0.0, 0.65), label="Exp. prolozeni prirustku nakazenych")  # fit increments
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abdena), '-.', color="#0000ff", label="Exp. prolozeni prirustku nakazenych")  # fit increments
+
 # plot
 ystep = 5  # ticks on y axis after ystep (in thousands)
 ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
@@ -258,4 +280,41 @@ plt.grid()
 fig_manager = plt.get_current_fig_manager()
 fig_manager.resize(1820, 930)
 plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
+
+plt.figure("Týdenní incidence")
+# currently sick
+plt.plot(day_counter, daily_week_incidency[1:N], marker='x', color='r', label="Denní přírustek, průměr za týden")
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abinc), '--', color="#ff0000", label="Exp. prolozeni denní přírustek, průměr za týden")
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abincp), '--', color="#ff5b5b", label="Exp. prolozeni denní přírustek, průměr za týden - 1 týden")
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abincpp), '--', color="#ff7d7d", label="Exp. prolozeni denní přírustek, průměr za týden - 2 týdny")
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abincppp), '--', color="#ff9d9d", label="Exp. prolozeni denní přírustek, průměr za týden - 3 týdny")
+plt.plot(exp_day_cnt, expfig(exp_day_cnt, Nfit, *abincpppp), '--', color="#ffc1c1", label="Exp. prolozeni denní přírustek, průměr za týden - 4 týdny")
+ystep = 5  # ticks on y axis after ystep (in thousands)
+ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
+plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
+plt.ylim(0.0, max(exponential((N-Nfit)*1.05, *ab), 1.05*np.max(currently_sick[1:N])))
+plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
+plt.xlim(N0*1.0, N*1.05)
+plt.legend()
+plt.grid()
+fig_manager = plt.get_current_fig_manager()
+fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
+
+plt.figure("Týdenní incidence - derivace")
+# currently sick
+plt.plot(day_counter, d_daily_week_incidency[1:N],  color='r', label="Denní přírustek, průměr za týden, první derivace")
+plt.plot(day_counter, d2_daily_week_incidency[1:N], color='b', label="Denní přírustek, průměr za týden, druhá derivace")
+ystep = 5  # ticks on y axis after ystep (in thousands)
+ylabel = [str(i) + "k" if i > 0 else "0" for i in range(0, 1000, ystep)]
+plt.yticks(np.arange(0.0, 1.0e6, ystep*1000.0), ylabel)
+plt.ylim(np.min((np.nanmin(d_daily_week_incidency), np.nanmin(d2_daily_week_incidency))), np.nanmax(d_daily_week_incidency))
+plt.xticks(np.arange(0.0, 2.0 * N, days_step), cal_day_cnt[0::days_step], rotation=90)
+plt.xlim(N0*1.0, N*1.05)
+plt.legend()
+plt.grid()
+fig_manager = plt.get_current_fig_manager()
+fig_manager.resize(1820, 930)
+plt.subplots_adjust(left=0.03, bottom=0.1, right=0.99, top=0.99, wspace=None, hspace=None)
+
 plt.show()
