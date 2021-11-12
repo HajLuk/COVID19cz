@@ -110,6 +110,7 @@ def basic_view(dataframe, **kwargs):
     plt.grid()
     plt.legend()
     plt.tight_layout()
+    ax.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, p: "{}k".format(int(int(x) / 1000))))
     return fig
 
 
@@ -134,8 +135,8 @@ DATES = {
 
 if __name__ == "__main__":
 
-    # dataframe = download_data(data_path="data.pckl")
-    dataframe = pd.read_pickle("data.pckl")
+    dataframe = download_data(data_path="data.pckl")
+    # dataframe = pd.read_pickle("data.pckl")
 
     # print(dataframe.keys())
 
