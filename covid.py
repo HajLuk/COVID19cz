@@ -125,7 +125,6 @@ def hospi_view(dataframe, **kwargs):
     """
     FIGSIZE = (19, 8)
     WINDOWNAME = "Hospitalizace"
-    subset = dataframe[dataframe.index > DATES["new_age"]]
 
     fig = plt.figure(WINDOWNAME, figsize=FIGSIZE)
     ax = plt.gca()
@@ -138,8 +137,7 @@ def hospi_view(dataframe, **kwargs):
         {"n": "stav_bez_priznaku", "l": "Hospitalizováni bez příznaků", "c": "g"},
     ]
 
-    #sumtd = np.zeros(to_draw.length())
-    subset = dataframe[dataframe.index > DATES["new_age"]]
+    subset = dataframe[dataframe.index > DATES["new_age"]].copy()
     subset["sum td next"] = subset["pocet_hosp"] - subset["pocet_hosp"]
     for td in to_draw:
         subset["sum td prev"] = subset["sum td next"]
@@ -172,7 +170,7 @@ def incrm_view(dataframe, **kwargs):
     FIGSIZE = (19, 8)
     WINDOWNAME = "Denní přírůstky"
     dataframe["aktualne_nakazenych"] = dataframe["kumulativni_pocet_nakazenych"] - dataframe["kumulativni_pocet_umrti"] - dataframe["kumulativni_pocet_vylecenych"]
-    subset = dataframe[dataframe.index > DATES["new_age"]]
+    subset = dataframe[dataframe.index > DATES["new_age"]].copy()
 
     fig = plt.figure(WINDOWNAME, figsize=FIGSIZE)
     ax = plt.gca()
@@ -203,6 +201,19 @@ def incrm_view(dataframe, **kwargs):
     plt.tight_layout()
     return fig
 
+def get_text_message(dataframe):
+    """
+    This function prepare text message with important stuff.
+    :return: str: message
+    """
+    date = dataframe.index[-1]
+    newly_infected = dataframe.loc[date, "prirustkovy_pocet_nakazenych"]
+    newly_dead = dataframe.loc[date, "prirustkovy_pocet_umrti"]
+    test_count = dataframe.loc[date, "prirustkovy_pocet_provedenych_testu"]
+    pattern = """Dne {} bylo evidováno: **{} nově nakažených** a **{} umrtí**. Bylo provedeno **{} testů**."""
+    msg = pattern.format(date, newly_infected, newly_dead, test_count)
+    return msg
+
 def robot_export(path=False):
     """
     This is the function for discord robot - it makes some drawings and save them without displaying.
@@ -213,6 +224,10 @@ def robot_export(path=False):
     path = path if path else FIG_PATH
     dataframe = download_data(data_path="data.pckl")
     basic_view(dataframe, display=False, filename="basic_overview.png")
+    hospi_view(dataframe, display=False, filename="hospi_overview.png")
+    incrm_view(dataframe, display=False, filename="incrm_overview.png")
+    return get_text_message(dataframe)
+
 
 # where to store the potentional output figures
 FIG_PATH = os.path.join("figs")
@@ -228,10 +243,13 @@ if __name__ == "__main__":
     dataframe = download_data(data_path="data.pckl")
     # dataframe = pd.read_pickle("data.pckl")
 
-    # print(dataframe.keys())
 
     basic_view(dataframe, display=True, filename="basic_overview.png")
     hospi_view(dataframe, display=True, filename="hospi_overview.png")
     incrm_view(dataframe, display=True, filename="incrm_overview.png")
+
+    # msg = get_text_message(dataframe)
+    # print(msg)
+
 
     plt.show()
