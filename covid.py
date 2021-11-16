@@ -160,9 +160,9 @@ def hospi_view(dataframe, **kwargs):
     return fig
 
 @handle_fig
-def death_view(dataframe, **kwargs):
+def incrm_view(dataframe, **kwargs):
     """
-    Number of dead COVID patients per day. It creates subset from the given date.
+    Change per day. It creates subset from the given date.
     It draws some basic series and their "prediction" for short horizon.
     
     :param dataframe:
@@ -170,7 +170,7 @@ def death_view(dataframe, **kwargs):
     :return:
     """
     FIGSIZE = (19, 8)
-    WINDOWNAME = "Mrtví"
+    WINDOWNAME = "Denní přírůstky"
     dataframe["aktualne_nakazenych"] = dataframe["kumulativni_pocet_nakazenych"] - dataframe["kumulativni_pocet_umrti"] - dataframe["kumulativni_pocet_vylecenych"]
     subset = dataframe[dataframe.index > DATES["new_age"]]
 
@@ -180,7 +180,11 @@ def death_view(dataframe, **kwargs):
     to_draw = [
         # "n: column name, "l": plot label, "c": plot color
         #{"n": "kumulativni_pocet_umrti", "l": "Mrtví celkem", "c": "r"},
-        {"n": "umrti", "l": "Denně mrtví", "c": "k"}
+        #{"n": "umrti", "l": "Denně mrtví", "c": "k"}
+        {"n": "prirustkovy_pocet_nakazenych", "l": "Denně nakažení", "c": "b"},
+        {"n": "prirustkovy_pocet_vylecenych", "l": "Denně vyléčení", "c": "g"},
+        {"n": "prirustkovy_pocet_umrti", "l": "Denně mrtví", "c": "k"},
+        {"n": "pacient_prvni_zaznam", "l": "Nově hospitalizovaní", "c": "r"}
     ]
 
     for td in to_draw:
@@ -189,7 +193,7 @@ def death_view(dataframe, **kwargs):
         ax.plot(augmented_subset.index, augmented_subset[td["n"]], td["c"], linestyle="-", marker="+", label=td["l"])
         ax.plot(augmented_subset.index, augmented_subset[new_column_name], ':{}'.format(td["c"]))
     plt.xlim(augmented_subset.index[0], augmented_subset.index[-1])
-    plt.ylim(0, subset["umrti"].max()*1.05)
+    plt.ylim(0, max(subset["prirustkovy_pocet_nakazenych"],subset["prirustkovy_pocet_vylecenych"]).max()*1.05)
     ax.xaxis.set_major_locator(plt.MaxNLocator(100))
     ax.yaxis.set_major_locator(plt.MaxNLocator(25))
     plt.xticks(rotation=90)
@@ -228,6 +232,6 @@ if __name__ == "__main__":
 
     basic_view(dataframe, display=True, filename="basic_overview.png")
     hospi_view(dataframe, display=True, filename="hospi_overview.png")
-    death_view(dataframe, display=True, filename="death_overview.png")
+    incrm_view(dataframe, display=True, filename="incrm_overview.png")
 
     plt.show()
