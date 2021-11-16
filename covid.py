@@ -125,7 +125,6 @@ def hospi_view(dataframe, **kwargs):
     """
     FIGSIZE = (19, 8)
     WINDOWNAME = "Hospitalizace"
-    subset = dataframe[dataframe.index > DATES["new_age"]]
 
     fig = plt.figure(WINDOWNAME, figsize=FIGSIZE)
     ax = plt.gca()
@@ -138,8 +137,7 @@ def hospi_view(dataframe, **kwargs):
         {"n": "stav_bez_priznaku", "l": "Hospitalizováni bez příznaků", "c": "g"},
     ]
 
-    #sumtd = np.zeros(to_draw.length())
-    subset = dataframe[dataframe.index > DATES["new_age"]]
+    subset = dataframe[dataframe.index > DATES["new_age"]].copy()
     subset["sum td next"] = subset["pocet_hosp"] - subset["pocet_hosp"]
     for td in to_draw:
         subset["sum td prev"] = subset["sum td next"]
@@ -171,8 +169,8 @@ def incrm_view(dataframe, **kwargs):
     """
     FIGSIZE = (19, 8)
     WINDOWNAME = "Denní přírůstky"
-    dataframe["aktualne_nakazenych"] = dataframe["kumulativni_pocet_nakazenych"] - dataframe["kumulativni_pocet_umrti"] - dataframe["kumulativni_pocet_vylecenych"]
-    subset = dataframe[dataframe.index > DATES["new_age"]]
+    dataframe.loc[:,"aktualne_nakazenych"] = dataframe["kumulativni_pocet_nakazenych"] - dataframe["kumulativni_pocet_umrti"] - dataframe["kumulativni_pocet_vylecenych"]
+    subset = dataframe[dataframe.index > DATES["new_age"]].copy()
 
     fig = plt.figure(WINDOWNAME, figsize=FIGSIZE)
     ax = plt.gca()
@@ -231,7 +229,7 @@ if __name__ == "__main__":
     # print(dataframe.keys())
 
     basic_view(dataframe, display=True, filename="basic_overview.png")
-    hospi_view(dataframe, display=True, filename="hospi_overview.png")
-    incrm_view(dataframe, display=True, filename="incrm_overview.png")
+    hospi_view(dataframe, display=False, filename="hospi_overview.png")
+    incrm_view(dataframe, display=False, filename="incrm_overview.png")
 
     plt.show()
