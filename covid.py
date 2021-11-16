@@ -10,6 +10,7 @@ import matplotlib.ticker as ticker
 def download_data(data_path):
     """
     This function  download data from MZCR, form single dataframe, store it and return it.
+    
     :param data_path:
     :return:
     """
@@ -26,6 +27,7 @@ def handle_fig(func):
     This is a wrapper for drawing functions.
     All drawing functions should use it as a decorator.
     It display and/or save figure.
+    
     :param func:
     :return:
     """
@@ -45,6 +47,7 @@ def get_exponential(dataset, col_name, new_col_name, start=False, stop=False, ho
     This si a function, that add new series to the given dataset.
     The added series is a exponential "prediction" of the target series.
     Note: it also extends the dataset by prediction horizon.
+    
     :param dataset: pandas dataframe
     :param col_name: name of the series to "predict"
     :param new_col_name: name for the new series - the "predicted" one
@@ -73,6 +76,7 @@ def basic_view(dataframe, **kwargs):
     """
     The basic overview. It creates subset from the given date.
     It draws some basic series and their "prediction" for short horizon.
+    
     :param dataframe:
     :param kwargs:
     :return:
@@ -112,8 +116,9 @@ def basic_view(dataframe, **kwargs):
 @handle_fig
 def hospi_view(dataframe, **kwargs):
     """
-    The basic overview. It creates subset from the given date.
+    The overview of all hospitalized patients by severity. It creates subset from the given date.
     It draws some basic series and their "prediction" for short horizon.
+    
     :param dataframe:
     :param kwargs:
     :return:
@@ -159,6 +164,7 @@ def hospi_view(dataframe, **kwargs):
 def robot_export(path=False):
     """
     This is the function for discord robot - it makes some drawings and save them without displaying.
+    
     :param path:
     :return:
     """
