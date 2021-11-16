@@ -156,10 +156,48 @@ def hospi_view(dataframe, **kwargs):
     plt.grid()
     plt.legend()
     ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
-    # ax.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda x, p: "{}k".format(int(int(x) / 1000))))
     plt.tight_layout()
     return fig
 
+@handle_fig
+def death_view(dataframe, **kwargs):
+    """
+    Number of dead COVID patients per day. It creates subset from the given date.
+    It draws some basic series and their "prediction" for short horizon.
+    
+    :param dataframe:
+    :param kwargs:
+    :return:
+    """
+    FIGSIZE = (19, 8)
+    WINDOWNAME = "Mrtví"
+    dataframe["aktualne_nakazenych"] = dataframe["kumulativni_pocet_nakazenych"] - dataframe["kumulativni_pocet_umrti"] - dataframe["kumulativni_pocet_vylecenych"]
+    subset = dataframe[dataframe.index > DATES["new_age"]]
+
+    fig = plt.figure(WINDOWNAME, figsize=FIGSIZE)
+    ax = plt.gca()
+
+    to_draw = [
+        # "n: column name, "l": plot label, "c": plot color
+        #{"n": "kumulativni_pocet_umrti", "l": "Mrtví celkem", "c": "r"},
+        {"n": "umrti", "l": "Denně mrtví", "c": "k"}
+    ]
+
+    for td in to_draw:
+        new_column_name = "{}_exp".format(td["n"])
+        augmented_subset = get_exponential(subset, td["n"], new_column_name, start=DATES["wave3"], horizon=14)
+        ax.plot(augmented_subset.index, augmented_subset[td["n"]], td["c"], linestyle="-", marker="+", label=td["l"])
+        ax.plot(augmented_subset.index, augmented_subset[new_column_name], ':{}'.format(td["c"]))
+    plt.xlim(augmented_subset.index[0], augmented_subset.index[-1])
+    plt.ylim(0, subset["umrti"].max()*1.05)
+    ax.xaxis.set_major_locator(plt.MaxNLocator(100))
+    ax.yaxis.set_major_locator(plt.MaxNLocator(25))
+    plt.xticks(rotation=90)
+    plt.grid()
+    plt.legend()
+    ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+    plt.tight_layout()
+    return fig
 
 def robot_export(path=False):
     """
@@ -190,5 +228,6 @@ if __name__ == "__main__":
 
     basic_view(dataframe, display=True, filename="basic_overview.png")
     hospi_view(dataframe, display=True, filename="hospi_overview.png")
+    death_view(dataframe, display=True, filename="death_overview.png")
 
     plt.show()
