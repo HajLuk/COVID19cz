@@ -61,14 +61,14 @@ def get_exponential(dataset, col_name, new_col_name, start=False, stop=False, ho
     subset = dataset[(stop >= dataset.index) & (dataset.index >= start)]
     x = range(len(subset.index))
     y = subset[col_name].values
-    (a,b), trash = optimize.curve_fit(
-        lambda t, a, b: a * np.exp(b * t), x, y, p0=(0, 0))
+    (a, b, c, d), _ = optimize.curve_fit(
+        lambda t, a, b, c, d: d + a * np.exp(b * t + c), x, y, p0=(0, 0, 0, 0))
     dataset = dataset.assign(new_col_name=np.nan)
     index_extension = pd.date_range(dataset.index[-1], periods=horizon+1)[1:].strftime('%Y-%m-%d')
     dataset_extension = pd.DataFrame(index=index_extension, columns=dataset.keys())
     dataset = dataset.append(dataset_extension)
     x_e = range(len(dataset.loc[(dataset.index >= start)]))
-    dataset.loc[(dataset.index >= start), new_col_name] = a * np.exp(b * x_e)
+    dataset.loc[(dataset.index >= start), new_col_name] = d + a * np.exp(b * x_e + c)
     return dataset
 
 @handle_fig
@@ -207,11 +207,16 @@ def get_text_message(dataframe):
     :return: str: message
     """
     date = dataframe.index[-1]
-    newly_infected = dataframe.loc[date, "prirustkovy_pocet_nakazenych"]
-    newly_dead = dataframe.loc[date, "prirustkovy_pocet_umrti"]
-    test_count = dataframe.loc[date, "prirustkovy_pocet_provedenych_testu"]
-    pattern = """Dne {} bylo evidováno: **{} nově nakažených** a **{} umrtí**. Bylo provedeno **{} testů**."""
-    msg = pattern.format(date, newly_infected, newly_dead, test_count)
+    date2 = dataframe.index[-2]
+    pattern = """*Dne {} bylo evidováno:*\n**{}** nově nakažených\n{} nově hospitalizovaných\n{} úmrtí\n{} testů\n{} vyléčených
+    """
+    msg = pattern.format(date,
+        dataframe.loc[date, "prirustkovy_pocet_nakazenych"],
+        int(dataframe.loc[date, "pocet_hosp"] - dataframe.loc[date2, "pocet_hosp"]),
+        dataframe.loc[date, "prirustkovy_pocet_umrti"],
+        dataframe.loc[date, "prirustkovy_pocet_provedenych_testu"],
+        dataframe.loc[date, "prirustkovy_pocet_vylecenych"]
+        )
     return msg
 
 def robot_export(path=False):
@@ -223,9 +228,9 @@ def robot_export(path=False):
     """
     path = path if path else FIG_PATH
     dataframe = download_data(data_path="data.pckl")
-    basic_view(dataframe, display=False, filename="basic_overview.png")
-    hospi_view(dataframe, display=False, filename="hospi_overview.png")
-    incrm_view(dataframe, display=False, filename="incrm_overview.png")
+    basic_view(dataframe, display=False, filename="covid_basic_overview.png")
+    hospi_view(dataframe, display=False, filename="covid_hospi_overview.png")
+    incrm_view(dataframe, display=False, filename="covid_incrm_overview.png")
     return get_text_message(dataframe)
 
 
@@ -248,8 +253,8 @@ if __name__ == "__main__":
     hospi_view(dataframe, display=True, filename="hospi_overview.png")
     incrm_view(dataframe, display=True, filename="incrm_overview.png")
 
-    # msg = get_text_message(dataframe)
-    # print(msg)
+    msg = get_text_message(dataframe)
+    print(msg)
 
 
     plt.show()
