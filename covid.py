@@ -183,8 +183,8 @@ def incrm_view(dataframe, **kwargs):
         #{"n": "umrti", "l": "Denně mrtví", "c": "k"}
         {"n": "prirustkovy_pocet_nakazenych", "l": "Denně nakažení", "c": "b"},
         {"n": "prirustkovy_pocet_vylecenych", "l": "Denně vyléčení", "c": "g"},
-        {"n": "prirustkovy_pocet_umrti", "l": "Denně mrtví", "c": "k"},
-        {"n": "pacient_prvni_zaznam", "l": "Nově hospitalizovaní", "c": "r"}
+        {"n": "pacient_prvni_zaznam", "l": "Nově hospitalizovaní", "c": "r"},
+        {"n": "prirustkovy_pocet_umrti", "l": "Denně mrtví", "c": "k"}
     ]
 
     for td in to_draw:
@@ -193,7 +193,7 @@ def incrm_view(dataframe, **kwargs):
         ax.plot(augmented_subset.index, augmented_subset[td["n"]], td["c"], linestyle="-", marker="+", label=td["l"])
         ax.plot(augmented_subset.index, augmented_subset[new_column_name], ':{}'.format(td["c"]))
     plt.xlim(augmented_subset.index[0], augmented_subset.index[-1])
-    plt.ylim(0, max(subset["prirustkovy_pocet_nakazenych"],subset["prirustkovy_pocet_vylecenych"]).max()*1.05)
+    plt.ylim(0, subset["prirustkovy_pocet_nakazenych"].max()*1.05)
     ax.xaxis.set_major_locator(plt.MaxNLocator(100))
     ax.yaxis.set_major_locator(plt.MaxNLocator(25))
     plt.xticks(rotation=90)
