@@ -91,13 +91,13 @@ def get_logistic(dataset, col_name, new_col_name, start=False, stop=False, horiz
     x = range(len(subset.index))
     y = subset[col_name].values
     (a, b, c, d), _ = optimize.curve_fit(
-        lambda t, a, b, c, d: d + a/(1+np.exp(b*t + c)), x, y, p0=(0, 0, 0, 0))
+        lambda t, a, b, c, d: d + a/(1+np.exp(b*x_e + c)), x, y, p0=(0, 0, 0, 0))
     dataset = dataset.assign(new_col_name=np.nan)
     index_extension = pd.date_range(dataset.index[-1], periods=horizon+1)[1:].strftime('%Y-%m-%d')
     dataset_extension = pd.DataFrame(index=index_extension, columns=dataset.keys())
     dataset = dataset.append(dataset_extension)
     x_e = range(len(dataset.loc[(dataset.index >= start)]))
-    dataset.loc[(dataset.index >= start), new_col_name] = d + a/(1+np.exp(b*t + c))
+    dataset.loc[(dataset.index >= start), new_col_name] = d + a/(1+np.exp(b*x_e + c))
     return dataset
 
 @handle_fig
