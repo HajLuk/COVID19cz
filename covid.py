@@ -208,11 +208,12 @@ def get_text_message(dataframe):
     """
     date = dataframe.index[-1]
     date2 = dataframe.index[-2]
-    pattern = """*Dne {} bylo evidováno:*\n**{}** nově nakažených\n{} nově hospitalizovaných\n{} úmrtí\n{} testů\n{} vyléčených
+    pattern = """*Dne {} bylo evidováno:*\n**{}** nově nakažených\n{} hospitalizovaných\n{} nově hospitalizovaných\n{} úmrtí\n{} testů\n{} vyléčených
     """
     msg = pattern.format(date,
         dataframe.loc[date, "prirustkovy_pocet_nakazenych"],
         int(dataframe.loc[date, "pocet_hosp"] - dataframe.loc[date2, "pocet_hosp"]),
+        dataframe.loc[date, "pacient_prvni_zaznam"],
         dataframe.loc[date, "prirustkovy_pocet_umrti"],
         dataframe.loc[date, "prirustkovy_pocet_provedenych_testu"],
         dataframe.loc[date, "prirustkovy_pocet_vylecenych"]
