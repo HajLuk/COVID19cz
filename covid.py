@@ -44,16 +44,16 @@ def handle_fig(func):
 
 def get_exponential(dataset, col_name, new_col_name, start=False, stop=False, horizon=14):
     """
-    This si a function, that add new series to the given dataset.
-    The added series is a exponential "prediction" of the target series.
-    Note: it also extends the dataset by prediction horizon.
+    This is a function that adds a new series to the given dataset.
+    The added series is an exponential interpolation of the target series.
+    Note: it also extends the dataset by a "prediction" horizon.
     
     :param dataset: pandas dataframe
-    :param col_name: name of the series to "predict"
-    :param new_col_name: name for the new series - the "predicted" one
-    :param start: string date - from when to start the exponential fit
-    :param stop: string date - the end of the data for exponential fit
-    :param horizon: how many dates should be predicted after the last date in the dataset (not from stop date!)
+    :param col_name: name of the series to interpolate
+    :param new_col_name: name for the new series - the interpolated one
+    :param start: string date - from when to start of the exponential fit
+    :param stop: string date - the end of the data for our exponential fit
+    :param horizon: how many dates should be "predicted" after the last date in the dataset (not from stop date!)
     :return:
     """
     start = start if start else dataset.index[-28]
@@ -69,6 +69,35 @@ def get_exponential(dataset, col_name, new_col_name, start=False, stop=False, ho
     dataset = dataset.append(dataset_extension)
     x_e = range(len(dataset.loc[(dataset.index >= start)]))
     dataset.loc[(dataset.index >= start), new_col_name] = d + a * np.exp(b * x_e + c)
+    return dataset
+
+def get_logistic(dataset, col_name, new_col_name, start=False, stop=False, horizon=14):
+    """
+    This is a function, that adds new series to the given dataset.
+    The added series is a logistic function interpolation of the target series.
+    Note: it also extends the dataset by a "prediction" horizon.
+    
+    :param dataset: pandas dataframe
+    :param col_name: name of the series to interpolate
+    :param new_col_name: name for the new series - the interpolated one
+    :param start: string date - from when to start of the logistic function fit
+    :param stop: string date - the end of the data for our logistic fit
+    :param horizon: how many dates should be "predicted" after the last date in the dataset (not from stop date!)
+    :return:
+    """
+    start = start if start else dataset.index[-28]
+    stop = stop if stop else dataset.index[-1]
+    subset = dataset[(stop >= dataset.index) & (dataset.index >= start)]
+    x = range(len(subset.index))
+    y = subset[col_name].values
+    (a, b, c, d), _ = optimize.curve_fit(
+        lambda t, a, b, c, d: d + a/(1+np.exp(b*t + c)), x, y, p0=(0, 0, 0, 0))
+    dataset = dataset.assign(new_col_name=np.nan)
+    index_extension = pd.date_range(dataset.index[-1], periods=horizon+1)[1:].strftime('%Y-%m-%d')
+    dataset_extension = pd.DataFrame(index=index_extension, columns=dataset.keys())
+    dataset = dataset.append(dataset_extension)
+    x_e = range(len(dataset.loc[(dataset.index >= start)]))
+    dataset.loc[(dataset.index >= start), new_col_name] = d + a/(1+np.exp(b*t + c))
     return dataset
 
 @handle_fig
