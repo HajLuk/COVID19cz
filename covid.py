@@ -237,24 +237,34 @@ def get_text_message(dataframe):
     """
     date = dataframe.index[-1]
     date2 = dataframe.index[-2]
-    pattern = "*Dne {} bylo evidováno:*"
+    pattern = "*Dne {} bylo v ČR evidováno:*"
+    pattern += "\n**{}** nakažených od začátku pandemie"
+    pattern += "\n**{}** aktuálně nakažených"
+    if dataframe.loc[date, "aktualne_nakazenych"] == max(dataframe["aktualne_nakazenych"]): pattern += " **(ATH)**"
     pattern += "\n**{}** nově nakažených"
     if dataframe.loc[date, "prirustkovy_pocet_nakazenych"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
-    pattern += "\n**{}** hospitalizovaných"
+    pattern += "\n**{}** aktuálně hospitalizovaných"
+    if dataframe.loc[date, "pocet_hosp"] == max(dataframe["pocet_hosp"]): pattern += " **(ATH)**"
+    pattern += "\n**{}** hospitalizovaných (včera {})"
     pattern += "\n**{}** nově hospitalizovaných"
     if dataframe.loc[date, "pacient_prvni_zaznam"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
     pattern += "\n**{}** úmrtí"
     if dataframe.loc[date, "prirustkovy_pocet_umrti"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
     pattern += "\n**{}** testů"
     if dataframe.loc[date, "prirustkovy_pocet_provedenych_testu"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
+    pattern += "\n**{}**% pozitivita testů"
     pattern += "\n**{}** vyléčených"
     if dataframe.loc[date, "prirustkovy_pocet_vylecenych"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
     msg = pattern.format(date,
+        dataframe.loc[date, "kumulativni_pocet_nakazenych"],
+        dataframe.loc[date, "aktualne_nakazenych"],
         dataframe.loc[date, "prirustkovy_pocet_nakazenych"],
-        int(dataframe.loc[date, "pocet_hosp"] - dataframe.loc[date2, "pocet_hosp"]),
+        int(dataframe.loc[date, "pocet_hosp"]),
+        int(dataframe.loc[date, "pocet_hosp"] - dataframe.loc[date2, "pocet_hosp"]),int(dataframe.loc[date2, "pocet_hosp"]),
         int(dataframe.loc[date, "pacient_prvni_zaznam"]),
         dataframe.loc[date, "prirustkovy_pocet_umrti"],
         dataframe.loc[date, "prirustkovy_pocet_provedenych_testu"],
+        int(round(100*dataframe.loc[date, "prirustkovy_pocet_nakazenych"]/dataframe.loc[date, "prirustkovy_pocet_provedenych_testu"])),
         dataframe.loc[date, "prirustkovy_pocet_vylecenych"]
         )
     return msg
