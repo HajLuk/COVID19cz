@@ -245,7 +245,7 @@ def get_text_message(dataframe):
     if dataframe.loc[date, "prirustkovy_pocet_nakazenych"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
     pattern += "\n**{}** aktuálně hospitalizovaných"
     if dataframe.loc[date, "pocet_hosp"] == max(dataframe["pocet_hosp"]): pattern += " **(ATH)**"
-    pattern += "\n**{}** změna hospitalizovaných (oproti včerejšímu stav {} hospitalizovaných)"
+    pattern += "\n**{}** změna hospitalizovaných (oproti včerejšímu stavu {} hospitalizovaných)"
     pattern += "\n**{}** nově hospitalizovaných"
     if dataframe.loc[date, "pacient_prvni_zaznam"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
     pattern += "\n**{}** úmrtí"
