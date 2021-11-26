@@ -238,7 +238,6 @@ def get_text_message(dataframe):
     date = dataframe.index[-1]
     date2 = dataframe.index[-2]
     pattern = "*Dne {} bylo v ČR evidováno:*"
-    pattern += "\n**{}** nakažených od začátku pandemie"
     pattern += "\n**{}** aktuálně nakažených"
     if dataframe.loc[date, "aktualne_nakazenych"] == max(dataframe["aktualne_nakazenych"]): pattern += " **(ATH)**"
     pattern += "\n**{}** nově nakažených"
@@ -256,7 +255,6 @@ def get_text_message(dataframe):
     pattern += "\n**{}** vyléčených"
     if dataframe.loc[date, "prirustkovy_pocet_vylecenych"] == max(dataframe["prirustkovy_pocet_nakazenych"]): pattern += " **(ATH)**"
     msg = pattern.format(date,
-        dataframe.loc[date, "kumulativni_pocet_nakazenych"],
         dataframe.loc[date, "aktualne_nakazenych"],
         dataframe.loc[date, "prirustkovy_pocet_nakazenych"],
         int(dataframe.loc[date, "pocet_hosp"]),
